@@ -5,27 +5,24 @@ import random
 from dataclasses import dataclass
 from typing import Tuple, Optional, Dict, List
 
-# Initialize pygame
 pygame.init()
 
-# Initial window dimensions
 WIDTH, HEIGHT = 1200, 800
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 pygame.display.set_caption("Solar System Simulation")
 
-# Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 SUN_COLOR = (255, 255, 190)
 PLANET_COLORS = [
-    (170, 170, 170),  # Mercury
-    (230, 230, 230),  # Venus
-    (50, 100, 200),   # Earth
-    (200, 100, 50),   # Mars
-    (220, 180, 130),  # Jupiter
-    (220, 190, 150),  # Saturn
-    (180, 210, 230),  # Uranus
-    (100, 150, 230),  # Neptune
+    (170, 170, 170),
+    (230, 230, 230),
+    (50, 100, 200),
+    (200, 100, 50),
+    (220, 180, 130),
+    (220, 190, 150),
+    (180, 210, 230),
+    (100, 150, 230),
 ]
 DWARF_PLANET_COLORS = {
     "Pluto": (200, 100, 100),
@@ -41,9 +38,8 @@ DWARF_PLANET_COLORS = {
 }
 MOON_COLOR = (200, 200, 200)
 
-# Fonts
 font = pygame.font.SysFont('Arial', 14)
-facts_font = pygame.font.SysFont('Arial', 14)  # Reduced to 14 for performance
+facts_font = pygame.font.SysFont('Arial', 14)
 
 @dataclass
 class CelestialBody:
@@ -89,7 +85,6 @@ class CelestialBody:
     def update_orbit_surface(self, zoom, view_x, view_y, width, height):
         if not self.parent:
             return
-        # Cache check with tolerance
         if (self.orbit_surface and
             abs(zoom - self.last_zoom) < 0.01 and
             width == self.last_width and
@@ -103,16 +98,14 @@ class CelestialBody:
         self.last_view_x = view_x
         self.last_view_y = view_y
 
-        # Compute orbit in world coordinates
         b = self.semi_major_axis * math.sqrt(self.one_minus_e2)
         self.orbit_points = []
-        for t in range(30):  # Reduced from 50
+        for t in range(30):
             theta = 2 * math.pi * t / 29
             x = self.semi_major_axis * math.cos(theta)
             y = b * math.sin(theta)
             self.orbit_points.append((x, y))
 
-        # Compute bounding box in screen coordinates
         parent_x = self.parent.x if self.parent else 0
         parent_y = self.parent.y if self.parent else 0
         screen_points = [
@@ -125,14 +118,12 @@ class CelestialBody:
         min_y, max_y = min(ys), max(ys)
         box_width = int(max_x - min_x) + 2
         box_height = int(max_y - min_y) + 2
-        box_width = max(1, min(box_width, width))  # Clamp to screen
+        box_width = max(1, min(box_width, width))
         box_height = max(1, min(box_height, height))
 
-        # Create smaller surface
         self.orbit_surface = pygame.Surface((box_width, box_height), pygame.SRCALPHA)
         self.orbit_rect = pygame.Rect(int(min_x), int(min_y), box_width, box_height)
 
-        # Draw orbit on surface
         orbit_color = (50, 50, 50, 64)
         line_width = 2 if self.semi_major_axis > 10 else 1
         local_points = [
@@ -152,8 +143,8 @@ class CelestialBody:
             surf = facts_font.render(line, True, WHITE)
             line_surfaces.append(surf)
             max_width = max(max_width, surf.get_width())
-        box_width = max_width + 24  # Reduced padding to 12px
-        box_height = len(lines) * 20 + 24  # 20px line height
+        box_width = max_width + 24
+        box_height = len(lines) * 20 + 24
         self.facts_surface = pygame.Surface((box_width, box_height), pygame.SRCALPHA)
         pygame.draw.rect(self.facts_surface, (0, 0, 0, 128), (0, 0, box_width, box_height), border_radius=6)
         for i, surf in enumerate(line_surfaces):
@@ -164,13 +155,13 @@ class CelestialBody:
         scaled_y = (self.y - view_y) * zoom + height // 2
         scaled_radius = self.radius * zoom
 
-        margin = 0.5 * max(width, height)  # Increased from 0.1
+        margin = 0.5 * max(width, height)
         if (scaled_x < -margin or scaled_x > width + margin or
             scaled_y < -margin or scaled_y > height + margin):
             return
 
         if self.parent:
-            if self.parent.name != "Sun":  # Moons: draw directly
+            if self.parent.name != "Sun":
                 b = self.semi_major_axis * math.sqrt(self.one_minus_e2)
                 points = []
                 for t in range(30):
@@ -181,7 +172,7 @@ class CelestialBody:
                     screen_y = (y + self.parent.y - view_y) * zoom + height // 2
                     points.append((int(screen_x), int(screen_y)))
                 pygame.draw.lines(surface, (50, 50, 50, 64), True, points, 1)
-            else:  # Planets: use cached surface
+            else:
                 self.update_orbit_surface(zoom, view_x, view_y, width, height)
                 if self.orbit_surface:
                     surface.blit(self.orbit_surface, self.orbit_rect)
@@ -1136,7 +1127,7 @@ def main():
                 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
                 view_x, view_y = WIDTH // 2, HEIGHT // 2
                 for body in solar_system.bodies:
-                    body.last_zoom = -1  # Mark caches as dirty
+                    body.last_zoom = -1
                     body.orbit_surface = None
                     body.facts_surface = None
                 info_surface = None
@@ -1204,7 +1195,6 @@ def main():
                     facts_y = mouse_pos[1] - selected_body.facts_surface.get_height() - 20
                 screen.blit(selected_body.facts_surface, (facts_x, facts_y))
 
-        # Cache info text
         if (info_surface is None or
             int(clock.get_fps()) != last_fps or
             solar_system.time_factor != last_time_factor or
